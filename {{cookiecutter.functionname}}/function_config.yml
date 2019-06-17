@@ -1,0 +1,6 @@
+{% if cookiecutter.use_layers %}Layers:
+  - arn:aws:lambda:<region>:<account>:layer:<name>:<version>
+{% endif %}
+{% if cookiecutter.use_env_vars %}Environment:
+  Key: Value
+{% endif %}

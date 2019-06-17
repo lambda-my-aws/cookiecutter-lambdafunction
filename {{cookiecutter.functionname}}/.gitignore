@@ -1,0 +1,7 @@
+*~
+*.pyc
+*pycache*
+*.json
+*.yml
+!function_config.yml
+!{{ cookiecutter.functionname}}.yml
