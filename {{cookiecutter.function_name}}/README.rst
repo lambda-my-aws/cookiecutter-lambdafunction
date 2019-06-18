@@ -1,4 +1,4 @@
-{{ cookiecutter.functionname }}
+{{ cookiecutter.function_name }}
 ======
 
 {{ cookiecutter.short_description }}

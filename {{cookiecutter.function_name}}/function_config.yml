@@ -1,0 +1,9 @@
+{% if cookiecutter.use_layers %}Layers:
+  - arn:aws:lambda:eu-west-1:373709687836:layer:ozone:9
+{% endif %}
+{% if cookiecutter.use_env_vars %}Environment:
+  Key: Value
+{% endif %}
+Runtime: {{ cookiecutter.runtime }}
+S3Bucket: {{ cookiecutter.bucket_name }}
+S3Key: {{ cookiecutter.function_name }}.zip
