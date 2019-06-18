@@ -52,13 +52,10 @@ ALIAS_NAME = TPL.add_parameter(Parameter(
 ))
 
 RELEASE_CON = TPL.add_condition(
-    'ReleaseAlias',
-    {
-        'ReleaseAlias': Equals(
-            Ref(RELEASE),
-            'True'
-        )
-    }
+    'ReleaseAlias', Equals(
+        Ref(RELEASE),
+        'True'
+    )
 )
 
 {% if cookiecutter.create_role %}
@@ -73,10 +70,20 @@ ROLE = Role(
     # Policies=[]
 )
 TPL.add_resource(ROLE)
-{% endif %}
+FUNCTION = lambda_function(Role=GetAtt(ROLE, 'Arn'), **CONFIG)
+TPL.add_resource(FUNCTION)
 
+{% else %}
+
+if not 'Role' in CONFIG.keys():
+    sys.exit(
+        'You need to either create a Role here or configure "Role" in template_config.yml'
+        'to a valid ARN'
+    )
 FUNCTION = lambda_function(**CONFIG)
 TPL.add_resource(FUNCTION)
+
+{% endif %}
 
 VERSION = TPL.add_resource(Version(
     'LambdaVersion',
@@ -86,7 +93,7 @@ VERSION = TPL.add_resource(Version(
 ALIAS = TPL.add_resource(Alias(
     'LambdaAlias',
     Name = Ref(ALIAS_NAME),
-    DependsOn = [RELEASE_CON],
+    Condition = RELEASE_CON,
     Description = Sub({%raw%}f'Alias to version ${{{VERSION.title}}}'){%endraw%},
     FunctionName = Ref(FUNCTION),
     FunctionVersion = Ref(VERSION)

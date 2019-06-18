@@ -44,7 +44,6 @@ venv-upgrade	:
 
 clean-template	:
 		$(RM) $(FUNCTION_NAME).yml
-		$(RM) $(FUNCTION_NAME)_packaged.yml
 
 clean		: clean-template
 		$(RM) $(FUNCTION_NAME).zip
@@ -53,12 +52,11 @@ clean		: clean-template
 template	: clean-template venv
 		python function_template.py
 
-
 package		:
 		clean
 		zip -r9 $(FUNCTION_NAME).zip function.py
 
-create		:
+create		: template publish
 		aws cloudformation create-stack --stack-name $(STACK) \
 		--template-body file://$(FUNCTION_NAME).yml \
 		--capabilities CAPABILITY_IAM
@@ -68,7 +66,7 @@ update		:
 		--template-body file://$(FUNCTION_NAME)_packaged.yml \
 		--capabilities CAPABILITY_IAM
 
-delete		: clean
+delete		:
 		aws cloudformation delete-stack --stack-name $(STACK)
 
 publish		: template package
