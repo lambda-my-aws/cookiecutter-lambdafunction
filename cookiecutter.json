@@ -7,8 +7,9 @@
     "year": "2019",
     "short_description": "A short sentence to describe your lambda function",
     "runtime": ["python3.7"],
-    "create_role": ["y", "n"],
-    "use_layers": ["y", "n"],
-    "use_env_vars": ["y", "n"],
+    "use_vpc": ["n", "y"],
+    "use_cfn_name": ["y", "n"],
+    "memory_size": ["128", "256", "512", "1024", "2048"],
+    "timeout": "15",
     "open_source_license": ["Not open source", "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3"]
 }

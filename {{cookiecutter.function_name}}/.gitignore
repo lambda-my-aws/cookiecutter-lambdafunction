@@ -4,4 +4,5 @@
 *.json
 *.yml
 !function_config.yml
-!{{ cookiecutter.function_name}}.yml
+!function_template.yml
+

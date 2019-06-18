@@ -1,0 +1,93 @@
+---
+# TEMPLATE GENERATED VIA COOKIECUTTER. ADAPT ACCORDINGLY
+
+Conditions:
+  ReleaseAlias: !Equals
+    - !Ref 'ReleaseNewAlias'
+    - 'True'
+Description: Template for function {{ cookiecutter.function_name }}
+Parameters:
+  NewAliasName:
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'False'
+    Type: String
+  ReleaseNewAlias:
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'False'
+    Type: String
+{% if cookiecutter.use_vpc == 'y' %}
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+{% endif %}
+Resources:
+{% if cookiecutter.use_vpc == 'y' %}
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: UseVpcCon
+    Properties:
+      GroupDescription: 'Security group for {{ cookiecutter.function_name }}'
+      GroupName: 'sg-{{ cookiecutter.function_name | lower }}'
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: '-1'
+          FromPort: '-1'
+          ToPort: '-1'
+      VpcId: !Ref VpcId
+{% endif %}
+  LambdaAlias:
+    Condition: ReleaseAlias
+    Properties:
+      Description: !Sub 'Alias to version ${LambdaVersion}'
+      FunctionName: !Ref 'LambdaFunction'
+      FunctionVersion: !Ref 'LambdaVersion'
+      Name: !Ref 'NewAliasName'
+    Type: AWS::Lambda::Alias
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: {{ cookiecutter.function_name }}.zip
+      Environment:
+        Variables:
+          Key: Value
+      Handler: function.lambda_handler
+      Layers:
+        - arn:aws:lambda:eu-west-1:373709687836:layer:ozone:9
+      MemorySize: {{ cookiecutter.memory_size }}
+      Role: !GetAtt 'LambdaFunctionRole.Arn'
+      Runtime: {{ cookiecutter.runtime }}
+      Timeout: {{ cookiecutter.timeout }}
+      FunctionName: {% if cookiecutter.use_cfn_name == 'y' %}!Ref 'AWS::NoValue'{% else %}{{ cookiecutter.function_name }}{% endif %}
+{% if cookiecutter.use_vpc == 'y' %}
+      VpcConfig:
+        - SubnetIds: !Ref SubnetIds
+          SecurityGroupIds:
+            - !GetAtt 'LambdaSecurityGroup.GroupId'
+{% endif %}
+  LambdaFunctionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub 'lambda.${AWS::URLSuffix}'
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        {% if cookiecutter.use_vpc == 'y' %}
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        {% else %}
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        {% endif %}
+    Type: AWS::IAM::Role
+  LambdaVersion:
+    Properties:
+      FunctionName: !GetAtt 'LambdaFunction.Arn'
+    Type: AWS::Lambda::Version
