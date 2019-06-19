@@ -4,22 +4,27 @@
 #
 ################################################################################
 
+ifndef VERBOSE
+.SILENT:
+endif
+
 RM			= rm -f
 ECHO			= echo -e
 TAG			= etags
 PIP			= pip
 PYTHON			= python3
 SHELL			= /bin/bash
+WHICH                   = /usr/bin/which
+WATCH                   = /usr/bin/watch
+TEST                    = /usr/bin/test
+ZIP			= /usr/bin/zip
 
 SRC			= function.py
 AWS			= aws
 
 VENV 			?= .venv
 VENV_ACTIVATE		=. $(VENV)/bin/activate
-
-ifndef VERBOSE
-.SILENT:
-endif
+ALIAS_NAME		?= $(shell bash -c 'read -p "Alias name: " alias; echo $$alias')
 
 STACK			:=lambda-function-{{ cookiecutter.function_name }}
 FUNCTION_NAME		:={{ cookiecutter.function_name }}
@@ -32,17 +37,17 @@ all			: venv template package
 
 
 ${VENV}			:
-			python3 -m venv $@
+			$(PYTHON) -m venv $@
 
 
 venv-install		: requirements_dev.txt | ${VENV}
-			pip install -U pip
-			pip install --upgrade -r requirements_dev.txt
+			$(PIP) install -U pip
+			$(PIP) install --upgrade -r requirements_dev.txt
 
 venv			:
 			test -d ${VENV} || $(MAKE) venv-install
 			$(VENV_ACTIVATE)
-			which python
+			$(WHICH) python
 
 
 clean-template		:
@@ -58,20 +63,18 @@ template		: clean-template package $(VENV_ACTIVATE)
 			--output-template-file $(FUNCTION_NAME).yml
 
 package			: clean
-			zip -r9 $(FUNCTION_NAME).zip function.py
+			$(ZIP) -r9 $(FUNCTION_NAME).zip $(SRC)
 
 
 create			: template $(VENV_ACTIVATE)
 			$(AWS) cloudformation create-stack --stack-name $(STACK) \
 			--template-body file://$(FUNCTION_NAME).yml \
-			--capabilities CAPABILITY_IAM \
-{% if cookiecutter.use_vpc == 'y' %}			--parameters file://function_params.json{% endif %}
+			--capabilities CAPABILITY_IAM {% if cookiecutter.use_vpc == 'y' %}--parameters file://function_params.json{% endif %}
 
 update			: template publish $(VENV_ACTIVATE)
 			$(AWS) cloudformation update-stack --stack-name $(STACK) \
 			--template-body file://$(FUNCTION_NAME).yml \
-			--capabilities CAPABILITY_IAM \
-{% if cookiecutter.use_vpc == 'y' %}			--parameters file://function_params.json{% endif %}
+			--capabilities CAPABILITY_IAM {% if cookiecutter.use_vpc == 'y' %}--parameters file://function_params.json{% endif %}
 
 delete			: clean-template
 			$(AWS) cloudformation delete-stack --stack-name $(STACK)
@@ -86,7 +89,6 @@ events			: $(VENV_ACTIVATE)
 			--region $(AWS_REGION)
 
 watch			:
-			watch --interval 1 "bash -c 'make events | head -40'"
-
+			$(WATCH) --interval 1 "bash -c 'make events | head -40'"
 
 .PHONY			: all venv venv-install clean clean-template package publish
