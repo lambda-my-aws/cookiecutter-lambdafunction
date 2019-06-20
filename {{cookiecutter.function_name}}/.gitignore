@@ -3,6 +3,8 @@
 *pycache*
 *.json
 *.yml
+*.zip
+.venv*
 !function_config.yml
 !function_template.yml
 
