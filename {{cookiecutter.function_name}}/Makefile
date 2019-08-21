@@ -69,12 +69,12 @@ package			: clean
 create			: template $(VENV_ACTIVATE)
 			$(AWS) cloudformation create-stack --stack-name $(STACK) \
 			--template-body file://$(FUNCTION_NAME).yml \
-			--capabilities CAPABILITY_IAM {% if cookiecutter.use_vpc == 'y' %}--parameters file://function_params.json{% endif %}
+			--capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 
 update			: template publish $(VENV_ACTIVATE)
 			$(AWS) cloudformation update-stack --stack-name $(STACK) \
 			--template-body file://$(FUNCTION_NAME).yml \
-			--capabilities CAPABILITY_IAM {% if cookiecutter.use_vpc == 'y' %}--parameters file://function_params.json{% endif %}
+			--capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 
 delete			: clean-template
 			$(AWS) cloudformation delete-stack --stack-name $(STACK)
